@@ -1,0 +1,92 @@
+#define BLYNK_TEMPLATE_ID "TMPLxxxx"
+#define BLYNK_TEMPLATE_NAME "MQ_ULTRA"
+#define BLYNK_AUTH_TOKEN "YourToken"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+char ssid[] = "NamaWiFi";
+char pass[] = "PasswordWiFi";
+
+#define MQ A0
+
+#define TRIG D5
+#define ECHO D6
+
+#define LED_GAS D2
+#define LED_JARAK D3
+
+BlynkTimer timer;
+
+void sendSensor()
+{
+  // ======================
+  // MQ SENSOR
+  // ======================
+  int gasValue = analogRead(MQ);
+
+  Blynk.virtualWrite(V0, gasValue);
+
+  Serial.print("Gas Value: ");
+  Serial.println(gasValue);
+
+  if(gasValue > 500)
+  {
+    digitalWrite(LED_GAS, HIGH);
+  }
+  else
+  {
+    digitalWrite(LED_GAS, LOW);
+  }
+
+  // ======================
+  // ULTRASONIC
+  // ======================
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+
+  digitalWrite(TRIG, LOW);
+
+  long duration = pulseIn(ECHO, HIGH);
+
+  int distance = duration * 0.034 / 2;
+
+  Blynk.virtualWrite(V1, distance);
+
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  if(distance < 10)
+  {
+    digitalWrite(LED_JARAK, HIGH);
+  }
+  else
+  {
+    digitalWrite(LED_JARAK, LOW);
+  }
+}
+
+void setup()
+{
+  Serial.begin(9600);
+
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+
+  pinMode(LED_GAS, OUTPUT);
+  pinMode(LED_JARAK, OUTPUT);
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  timer.setInterval(1000L, sendSensor);
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
