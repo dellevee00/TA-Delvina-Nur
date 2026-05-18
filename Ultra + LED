@@ -1,0 +1,58 @@
+#define BLYNK_TEMPLATE_ID "TMPLxxxx"
+#define BLYNK_TEMPLATE_NAME "Ultrasonic"
+#define BLYNK_AUTH_TOKEN "YourToken"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+char ssid[] = "NamaWiFi";
+char pass[] = "PasswordWiFi";
+
+#define TRIG D5
+#define ECHO D6
+#define LED D2
+
+BlynkTimer timer;
+
+void sendSensor()
+{
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+
+  digitalWrite(TRIG, LOW);
+
+  long duration = pulseIn(ECHO, HIGH);
+
+  int distance = duration * 0.034 / 2;
+
+  Blynk.virtualWrite(V0, distance);
+
+  if(distance < 10)
+  {
+    digitalWrite(LED, HIGH);
+  }
+  else
+  {
+    digitalWrite(LED, LOW);
+  }
+}
+
+void setup()
+{
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  pinMode(LED, OUTPUT);
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  timer.setInterval(1000L, sendSensor);
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
