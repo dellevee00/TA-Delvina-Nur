@@ -1,0 +1,54 @@
+#define BLYNK_TEMPLATE_ID "TMPLxxxx"
+#define BLYNK_TEMPLATE_NAME "SafetySystem"
+#define BLYNK_AUTH_TOKEN "YourToken"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+char ssid[] = "NamaWiFi";
+char pass[] = "PasswordWiFi";
+
+#define FLAME D5
+#define MQ A0
+#define BUZZER D2
+
+BlynkTimer timer;
+
+void sendSensor()
+{
+  int flameValue = digitalRead(FLAME);
+  int gasValue = analogRead(MQ);
+
+  // Kirim data ke Blynk
+  Blynk.virtualWrite(V0, flameValue);
+  Blynk.virtualWrite(V1, gasValue);
+
+  // Kondisi alarm
+  if(flameValue == 0 || gasValue > 500)
+  {
+    digitalWrite(BUZZER, HIGH);
+    Blynk.logEvent("danger_alert", "Api atau gas terdeteksi!");
+  }
+  else
+  {
+    digitalWrite(BUZZER, LOW);
+  }
+}
+
+void setup()
+{
+  pinMode(FLAME, INPUT);
+  pinMode(BUZZER, OUTPUT);
+
+  Serial.begin(9600);
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  timer.setInterval(1000L, sendSensor);
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
