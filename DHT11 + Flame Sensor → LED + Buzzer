@@ -1,0 +1,66 @@
+#define BLYNK_TEMPLATE_ID "TMPLxxxx"
+#define BLYNK_TEMPLATE_NAME "SmartSystem"
+#define BLYNK_AUTH_TOKEN "YourToken"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <DHT.h>
+
+char ssid[] = "NamaWiFi";
+char pass[] = "PasswordWiFi";
+
+#define DHTPIN D4
+#define DHTTYPE DHT11
+#define FLAME D5
+#define LED D2
+#define BUZZER D6
+
+DHT dht(DHTPIN, DHTTYPE);
+
+BlynkTimer timer;
+
+void sendSensor()
+{
+  float temp = dht.readTemperature();
+  int flame = digitalRead(FLAME);
+
+  Blynk.virtualWrite(V0, temp);
+  Blynk.virtualWrite(V1, flame);
+
+  if(temp > 30)
+  {
+    digitalWrite(BUZZER, HIGH);
+  }
+  else
+  {
+    digitalWrite(BUZZER, LOW);
+  }
+
+  if(flame == 0)
+  {
+    digitalWrite(LED, HIGH);
+  }
+  else
+  {
+    digitalWrite(LED, LOW);
+  }
+}
+
+void setup()
+{
+  pinMode(FLAME, INPUT);
+  pinMode(LED, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+
+  dht.begin();
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  timer.setInterval(1000L, sendSensor);
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
